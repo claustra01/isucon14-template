@@ -15,12 +15,19 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	"github.com/kaz/pprotein/integration/standalone"
 )
 
 var db *sqlx.DB
 
 func main() {
 	mux := setup()
+
+	// pprof
+	go func() {
+		standalone.Integrate(":6060")
+	}()
+
 	slog.Info("Listening on :8080")
 	http.ListenAndServe(":8080", mux)
 }
@@ -136,6 +143,11 @@ func postInitialize(w http.ResponseWriter, r *http.Request) {
 	if _, err := db.ExecContext(ctx, "UPDATE settings SET value = ? WHERE name = 'payment_gateway_url'", req.PaymentServer); err != nil {
 		writeError(w, http.StatusInternalServerError, err)
 		return
+	}
+
+	// pprotein start
+	if _, err := http.Get("http://localhost:9000/api/group/collect"); err != nil {
+		slog.Error("failed to start pprotein", err)
 	}
 
 	writeJSON(w, http.StatusOK, postInitializeResponse{Language: "go"})
