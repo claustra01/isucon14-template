@@ -5,7 +5,7 @@ set -e
 # server
 APP_SERVER_SSH="isucon14-1"
 NGINX_SERVER_SSH="isucon14-1"
-MYSQL_SERVER_SSH="isucon14-1"
+MYSQL_SERVER_SSH="isucon14-2"
 
 # variables
 APP_BIN_NAME="isuride"
