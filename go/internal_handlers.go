@@ -82,15 +82,15 @@ func internalGetMatching(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		if len(rideList) == 0 {
+			break
+		}
 		ride := rideList[nearestIndex]
 		if _, err := db.ExecContext(ctx, "UPDATE rides SET chair_id = ? WHERE id = ?", chair.ID, ride.ID); err != nil {
 			writeError(w, http.StatusInternalServerError, err)
 			return
 		}
 		rideList = append(rideList[:nearestIndex], rideList[nearestIndex+1:]...)
-		if len(rideList) == 0 {
-			break
-		}
 	}
 
 	w.WriteHeader(http.StatusNoContent)

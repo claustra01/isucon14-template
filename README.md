@@ -7,3 +7,4 @@
 - latest_statusのN+1除去: 13822
 - userとchairをキャッシュ: 17336
 - notificationの間隔を伸ばす: 28916
+- coordinateのcreated_atをサーバー側で生成: 31929
