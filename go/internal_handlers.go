@@ -88,6 +88,9 @@ func internalGetMatching(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		rideList = append(rideList[:nearestIndex], rideList[nearestIndex+1:]...)
+		if len(rideList) == 0 {
+			break
+		}
 	}
 
 	w.WriteHeader(http.StatusNoContent)

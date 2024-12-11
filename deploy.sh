@@ -70,3 +70,9 @@ ssh $APP_SERVER_SSH "
   sudo chown isucon:isucon /home/isucon/webapp/sql/1-schema.sql
   rm -r ~/1-schema.sql
 "
+scp ./sql/4-alter.sql $APP_SERVER_USER@$APP_SERVER_SSH:~/4-alter.sql
+ssh $APP_SERVER_SSH "
+  sudo cp -r ~/4-alter.sql /home/isucon/webapp/sql/4-alter.sql
+  sudo chown isucon:isucon /home/isucon/webapp/sql/4-alter.sql
+  rm -r ~/4-alter.sql
+"
