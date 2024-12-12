@@ -875,45 +875,41 @@ func appGetNearbyChairs(w http.ResponseWriter, r *http.Request) {
 	defer tx.Rollback()
 
 	chairs := []Chair{}
-	err = tx.SelectContext(
-		ctx,
-		&chairs,
-		`SELECT * FROM chairs`,
-	)
+	if err := tx.SelectContext(ctx, &chairs, `SELECT id, name, model FROM chairs WHERE is_active = 1`); err != nil {
+		writeError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	chairIDs := []string{}
+	for _, chair := range chairs {
+		chairIDs = append(chairIDs, chair.ID)
+	}
+
+	// completedでないrideが存在するchairを除外
+	rides := []Ride{}
+	query, args, err := sqlx.In(`SELECT * FROM rides WHERE chair_id IN (?) AND latest_status != 'COMPLETED' ORDER BY created_at DESC`, chairIDs)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err)
+		return
+	}
+	query = tx.Rebind(query)
+	err = tx.SelectContext(ctx, &rides, query, args...)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	nearbyChairs := []appGetNearbyChairsResponseChair{}
-	for _, chair := range chairs {
-		if !chair.IsActive {
-			continue
-		}
-
-		rides := []*Ride{}
-		if err := tx.SelectContext(ctx, &rides, `SELECT * FROM rides WHERE chair_id = ? ORDER BY created_at DESC`, chair.ID); err != nil {
-			writeError(w, http.StatusInternalServerError, err)
-			return
-		}
-
-		skip := false
-		for _, ride := range rides {
-			// 過去にライドが存在し、かつ、それが完了していない場合はスキップ
-			// status, err := getLatestRideStatus(ctx, tx, ride.ID)
-			// if err != nil {
-			// 	writeError(w, http.StatusInternalServerError, err)
-			// 	return
-			// }
-			status := *ride.LatestStatus
-			if status != "COMPLETED" {
-				skip = true
+	for _, ride := range rides {
+		for i, chair := range chairs {
+			if chair.ID == ride.ChairID.String {
+				chairs = append(chairs[:i], chairs[i+1:]...)
 				break
 			}
 		}
-		if skip {
-			continue
-		}
+	}
+
+	nearbyChairs := []appGetNearbyChairsResponseChair{}
+	for _, chair := range chairs {
 
 		// 最新の位置情報を取得
 		chairLocation := &ChairLocation{}

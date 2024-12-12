@@ -9,3 +9,4 @@
 - notificationの間隔を伸ばす: 28916
 - coordinateのcreated_atをサーバー側で生成: 31929
 - mysqlコンフィグ設定: 34278
+- nearByChairsのN+1軽減: 39704
